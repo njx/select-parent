@@ -1,8 +1,6 @@
 /*jslint vars: true, plusplus: true, devel: true, nomen: true, indent: 4, maxerr: 50 */
 /*global define, brackets, $, CodeMirror */
 
-// TODO: doesn't properly balance block if initial selection crosses blocks
-// TODO: clear select stack on document switch or selection change
 // TODO: handle languages other than JS/CSS
 // TODO: should scroll to beginning of block?
 // TODO: do you expect it to select the function () or other header at the beginning of block?
@@ -19,7 +17,7 @@ define(function (require, exports, module) {
     var ID_SELECT_PARENT = "com.notwebsafe.select-parent",
         ID_SELECT_CHILD = "com.notwebsafe.select-child";
 
-    var selectStack = [];
+    var selectStack = [], ignoreNextSel = false, curEditor;
     
     /**
      * Take the given position and return the position immediately before it,
@@ -56,6 +54,29 @@ define(function (require, exports, module) {
         }
     }
     
+    function cloneSelection(sel) {
+        return { start: { line: sel.start.line, ch: sel.start.ch }, end: { line: sel.end.line, ch: sel.end.ch } };
+    }
+    
+    /**
+     * Return the number of end braces minus the number of start braces in the selected text.
+     */
+    function numExcessEndBraces(editor, sel) {
+        var numStartBraces = 0, numEndBraces = 0, ctx;
+        sel = cloneSelection(sel);
+        
+        ctx = TokenUtils.getInitialContext(editor._codeMirror, sel.start);
+        while (ctx.pos.line < sel.end.line || (ctx.pos.line === sel.end.line && ctx.pos.ch <= sel.end.ch)) {
+            TokenUtils.moveNextToken(ctx);
+            if (ctx.token.string === "{") {
+                numStartBraces++;
+            } else if (ctx.token.string === "}") {
+                numEndBraces++;
+            }
+        }
+        return numEndBraces - numStartBraces;
+    }
+    
     /**
      * Given the current selection in the current editor, find the block immediately surrounding it
      * and set the selection to encompass it.
@@ -67,9 +88,14 @@ define(function (require, exports, module) {
         }
         
         var sel = editor.getSelection(),
-            origSel = { start: { line: sel.start.line, ch: sel.start.ch }, end: { line: sel.end.line, ch: sel.end.ch } },
+            origSel = cloneSelection(sel),
             ctx = TokenUtils.getInitialContext(editor._codeMirror, sel.start),
-            start, end, nest = 0;
+            start, end, 
+            nest, braceBalance = numExcessEndBraces(editor, sel);
+        
+        // Search backward for the next outer brace.
+        // If there are more end braces than start braces in the original selection, it's like we started at a deeper nest level.
+        nest = (braceBalance > 0 ? braceBalance : 0);
         do {
             if (ctx.token.string === "{") {
                 if (nest === 0) {
@@ -82,9 +108,12 @@ define(function (require, exports, module) {
                 nest++;
             }
         } while (TokenUtils.movePrevToken(ctx));
+        
+        // Search forward for the matching brace.
         ctx = TokenUtils.getInitialContext(editor._codeMirror, sel.end);
         TokenUtils.moveNextToken(ctx);
-        nest = 0;
+        // If there are more start braces than end braces in the original selection, it's like we started at a deeper nest level.
+        nest = (braceBalance < 0 ? -braceBalance : 0);
         do {
             if (ctx.token.string === "}") {
                 if (nest === 0) {
@@ -99,6 +128,7 @@ define(function (require, exports, module) {
             }
         } while (TokenUtils.moveNextToken(ctx));
         if (start && end) {
+            ignoreNextSel = true;
             selectStack.push({start: origSel.start, end: origSel.end});
             editor.setSelection(start, end);
         }
@@ -112,8 +142,29 @@ define(function (require, exports, module) {
 
         var sel;
         if (sel = selectStack.pop()) {
+            ignoreNextSel = true;
             editor.setSelection(sel.start, sel.end);
         }
+    }
+    
+    function maybeClearStack(force) {
+        // If the current document changed, or if this selection isn't one that came from us,
+        // clear the selection stack.
+        if (force === true || !ignoreNextSel) {
+            selectStack = [];
+        }
+        ignoreNextSel = false;
+    }
+    
+    function updateEditor() {
+        if (curEditor) {
+            $(curEditor).off("cursorActivity", maybeClearStack);
+        }
+        curEditor = EditorManager.getFocusedEditor();
+        if (curEditor) {
+            $(curEditor).on("cursorActivity", maybeClearStack);
+        }
+        maybeClearStack(true);
     }
     
     CommandManager.register("Select Parent", ID_SELECT_PARENT, handleSelectParent);
@@ -123,4 +174,7 @@ define(function (require, exports, module) {
     navigateMenu.addMenuDivider();
     navigateMenu.addMenuItem(ID_SELECT_PARENT, "Ctrl-Shift-,");
     navigateMenu.addMenuItem(ID_SELECT_CHILD, "Ctrl-Shift-.");
+    
+    $(EditorManager).on("focusedEditorChange", updateEditor);
+    updateEditor();
 });
