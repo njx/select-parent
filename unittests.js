@@ -140,7 +140,9 @@ define(function (require, exports, module) {
             testEditor.setCursorPos(3, 23); // before "foo:"
             SelectParent.selectParent(testEditor);
             var parentSel = testEditor.getSelection();
+            expect(SelectParent.canSelectChild()).toBe(true);
             SelectParent.maybeClearStack(true);
+            expect(SelectParent.canSelectChild()).toBe(false);
             SelectParent.selectChild(testEditor); // should be a no op
             var result = testEditor.getSelection();
             expect(result).toEqual(parentSel);

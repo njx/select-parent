@@ -170,5 +170,4 @@ define(function (require, exports, module) {
     exports.selectChild = selectChild;
     exports.canSelectChild = canSelectChild;
     exports.maybeClearStack = maybeClearStack;
-    exports.numMismatchedBraces = numMismatchedBraces;
 });
