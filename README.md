@@ -1,10 +1,10 @@
 A simple [Brackets](https://github.com/adobe/brackets) extension that lets you quickly select the 
 parent block of the current selection.
 
-Use Cmd/Ctrl-< (Cmd/Ctrl-Shift-,) to select the parent block. You can keep hitting the same key
-to go outward to larger scopes. If you go too far, you can use Cmd/Ctrl-> (Cmd/Ctrl-Shift-.) to
+Use **Cmd/Ctrl-<** (Cmd/Ctrl-Shift-,) to select the parent block. You can keep hitting the same key
+to go outward to larger scopes. If you go too far, you can use **Cmd/Ctrl->** (Cmd/Ctrl-Shift-.) to
 go back down to the children that were previously selected. These are also available from
-Navigate > Select Parent and Navigate > Select Child.
+*Navigate > Select Parent* and *Navigate > Select Child.*
 
 This also makes it easy to jump to the open or close brace of the surrounding block--do
 Cmd/Ctrl-< to select the block, then hit the left arrow to go to the open brace, or right arrow
