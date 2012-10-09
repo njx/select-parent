@@ -24,12 +24,6 @@
 /*jslint vars: true, plusplus: true, devel: true, nomen: true, indent: 4, maxerr: 50 */
 /*global define, brackets, $ */
 
-// TODO: handle languages other than JS/CSS
-// TODO: add Closure comments
-// TODO: should scroll to beginning of block?
-// TODO: do you expect it to select the function () or other header at the beginning of block?
-// TODO: do you want to skip to functions, or any block?
-
 // Main module for Select Parent/Select Child extension. The main logic is in
 // SelectParent.js, which deals with individual editors. The main module glues the 
 // functionality into the menus and handles communication with EditorManager. It's
