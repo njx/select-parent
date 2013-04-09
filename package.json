@@ -1,0 +1,15 @@
+{
+    "name": "select-parent",
+    "title": "Select Parent",
+    "version": "1.0.0",
+    "description": "Lets you quickly select the parent block of the current selection using Cmd/Ctrl-<, and go back down using Cmd/Ctrl->.",
+    "files": [
+        "main.js",
+        "SelectParent.js",
+        "README.md",
+        "unittests.js"
+    ],
+    "engines": {
+        "brackets": ">0.22.0"
+    }
+}
