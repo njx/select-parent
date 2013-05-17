@@ -3,6 +3,7 @@
     "title": "Select Parent",
     "version": "1.0.0",
     "description": "Lets you quickly select the parent block of the current selection using Cmd/Ctrl-<, and go back down using Cmd/Ctrl->.",
+    "homepage": "https://github.com/njx/select-parent",
     "files": [
         "main.js",
         "SelectParent.js",
