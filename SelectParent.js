@@ -80,6 +80,9 @@ define(function (require, exports, module) {
         ctx = TokenUtils.getInitialContext(editor._codeMirror, sel.start);
         while (ctx.pos.line < sel.end.line || (ctx.pos.line === sel.end.line && ctx.pos.ch <= sel.end.ch)) {
             TokenUtils.moveNextToken(ctx);
+            if (ctx.pos.line === sel.end.line && ctx.pos.ch > sel.end.ch) {
+              break;
+            }
             if (ctx.token.string === "{") {
                 nest++;
             } else if (ctx.token.string === "}") {
