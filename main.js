@@ -69,8 +69,8 @@ define(function (require, exports, module) {
     
     var navigateMenu = Menus.getMenu(Menus.AppMenuBar.NAVIGATE_MENU);
     navigateMenu.addMenuDivider();
-    navigateMenu.addMenuItem(ID_SELECT_PARENT, "Ctrl-Shift-,");
-    navigateMenu.addMenuItem(ID_SELECT_CHILD, "Ctrl-Shift-.");
+    navigateMenu.addMenuItem(ID_SELECT_PARENT, "Ctrl-Shift-=");
+    navigateMenu.addMenuItem(ID_SELECT_CHILD, "Ctrl-Shift--");
 
     selectChildCmd.setEnabled(false);
     $(SelectParent).on("stackChange", function () {
