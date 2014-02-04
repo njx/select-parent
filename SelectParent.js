@@ -80,6 +80,9 @@ define(function (require, exports, module) {
         ctx = TokenUtils.getInitialContext(editor._codeMirror, sel.start);
         while (ctx.pos.line < sel.end.line || (ctx.pos.line === sel.end.line && ctx.pos.ch <= sel.end.ch)) {
             TokenUtils.moveNextToken(ctx);
+            if (ctx.pos.line === sel.end.line && ctx.pos.ch > sel.end.ch) {
+              break;
+            }
             if (ctx.token.string === "{") {
                 nest++;
             } else if (ctx.token.string === "}") {
@@ -97,10 +100,13 @@ define(function (require, exports, module) {
         var sel = editor.getSelection(),
             origSel = cloneSelection(sel),
             ctx = TokenUtils.getInitialContext(editor._codeMirror, sel.start),
+            ctxe = TokenUtils.getInitialContext(editor._codeMirror, sel.end),
             start,
             end,
             nest,
             braceInfo = numMismatchedBraces(editor, sel);
+        
+        TokenUtils.moveNextToken(ctxe);
         
         // Search backward for the next outer open brace, skipping open braces that match end braces
         // in the selection.
@@ -108,7 +114,12 @@ define(function (require, exports, module) {
         do {
             if (ctx.token.string === "{") {
                 if (nest === 0) {
-                    start = nudgeBackward(editor, ctx.pos);
+                    if (ctxe.token.string === "}") {
+                      start = nudgeBackward(editor, ctx.pos);
+                      end = ctxe.pos;
+                    } else {
+                      start = ctx.pos;
+                    }
                     break;
                 } else {
                     nest--;
@@ -120,21 +131,21 @@ define(function (require, exports, module) {
         
         // Search forward for the next outer close brace, skipping close braces that match open braces
         // in the selection.
-        ctx = TokenUtils.getInitialContext(editor._codeMirror, sel.end);
-        TokenUtils.moveNextToken(ctx);
-        nest = braceInfo.numUnclosedOpenBraces;
-        do {
-            if (ctx.token.string === "}") {
-                if (nest === 0) {
-                    end = ctx.pos;
-                    break;
-                } else {
-                    nest--;
-                }
-            } else if (ctx.token.string === "{") {
-                nest++;
-            }
-        } while (TokenUtils.moveNextToken(ctx));
+        if (!end) {
+          nest = braceInfo.numUnclosedOpenBraces;
+          do {
+              if (ctxe.token.string === "}") {
+                  if (nest === 0) {
+                      end = nudgeBackward(editor, ctxe.pos);
+                      break;
+                  } else {
+                      nest--;
+                  }
+              } else if (ctxe.token.string === "{") {
+                  nest++;
+              }
+          } while (TokenUtils.moveNextToken(ctxe));
+        }
         if (start && end) {
             ignoreNextSel = true;
             selectStack.push({start: origSel.start, end: origSel.end});
